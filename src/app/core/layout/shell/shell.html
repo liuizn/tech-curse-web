@@ -1,0 +1,68 @@
+<div class="flex min-h-screen flex-col bg-background text-foreground">
+  <header class="border-b border-border bg-card">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+      <a routerLink="/" class="text-lg font-semibold">Tech Curse</a>
+
+      <nav class="hidden items-center gap-2 md:flex" aria-label="Principal">
+        @for (link of links(); track link.rota) {
+          <a hlmBtn variant="ghost" [routerLink]="link.rota" routerLinkActive="bg-accent">{{
+            link.rotulo
+          }}</a>
+        }
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          type="button"
+          (click)="tema.alternar()"
+          aria-label="Alternar tema"
+        >
+          {{ tema.escuro() ? '☀' : '☾' }}
+        </button>
+        <span class="hidden text-sm text-muted-foreground md:inline">{{ usuario()?.email }}</span>
+        <button hlmBtn variant="outline" size="sm" type="button" data-teste="sair" (click)="sair()">
+          Sair
+        </button>
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          type="button"
+          class="md:hidden"
+          aria-label="Abrir menu"
+          [attr.aria-expanded]="menuAberto()"
+          (click)="alternarMenu()"
+        >
+          ☰
+        </button>
+      </div>
+    </div>
+
+    @if (menuAberto()) {
+      <nav
+        class="flex flex-col gap-1 border-t border-border px-4 py-2 md:hidden"
+        aria-label="Principal (mobile)"
+      >
+        <span class="px-2 py-1 text-sm text-muted-foreground">{{ usuario()?.email }}</span>
+        @for (link of links(); track link.rota) {
+          <a
+            hlmBtn
+            variant="ghost"
+            class="justify-start"
+            [routerLink]="link.rota"
+            (click)="alternarMenu()"
+          >
+            {{ link.rotulo }}
+          </a>
+        }
+      </nav>
+    }
+  </header>
+
+  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+    <router-outlet />
+  </main>
+</div>
