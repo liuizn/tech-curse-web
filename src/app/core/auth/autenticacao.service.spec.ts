@@ -46,6 +46,24 @@ describe('AutenticacaoService', () => {
     expect(servico.role()).toBe('Student');
   });
 
+  it('ignora sessão gravada com JSON inválido', () => {
+    localStorage.setItem(CHAVE_SESSAO, '{');
+    let servico!: AutenticacaoService;
+    expect(() => (servico = criar())).not.toThrow();
+    expect(servico.estaAutenticado()).toBe(false);
+    expect(servico.usuario()).toBeNull();
+    expect(servico.possuiRefreshToken()).toBe(false);
+  });
+
+  it('ignora sessão gravada com formato inválido', () => {
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify({ accessToken: 1 }));
+    let servico!: AutenticacaoService;
+    expect(() => (servico = criar())).not.toThrow();
+    expect(servico.estaAutenticado()).toBe(false);
+    expect(servico.usuario()).toBeNull();
+    expect(servico.possuiRefreshToken()).toBe(false);
+  });
+
   it('considera sessão expirada como não autenticada, mas com refresh disponível', () => {
     localStorage.setItem(
       CHAVE_SESSAO,
@@ -124,6 +142,20 @@ describe('AutenticacaoService', () => {
     expect(servico.estaAutenticado()).toBe(false);
     expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
     expect(navegar).toHaveBeenCalledWith(['/entrar'], { queryParams: { returnUrl: '/cursos' } });
+  });
+
+  it('sair sem returnUrl limpa a sessão e navega para /entrar sem queryParams', () => {
+    localStorage.setItem(
+      CHAVE_SESSAO,
+      JSON.stringify({ accessToken: TOKEN_ALUNO, refreshToken: 'r1', expiresAt: FUTURO }),
+    );
+    const servico = criar();
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    servico.sair();
+    expect(servico.estaAutenticado()).toBe(false);
+    expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
+    expect(navegar).toHaveBeenCalledWith(['/entrar'], {});
   });
 
   it('propaga o erro HTTP de login', async () => {
