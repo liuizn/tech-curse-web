@@ -35,6 +35,15 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 2. Portal do aluno — matrícula, `/me`, pagamentos.
 3. Painel administrativo — CRUD de cursos/estudantes, pagamentos.
 
+## Decisões registradas
+
+- `erroInterceptor` também silencia `400` (além de `401`/`422`) — os formulários tratam esse status inline (ex.: credenciais inválidas no login).
+- A ordem das rotas `''` em `app.routes.ts` é obrigatória: o bloco do `ShellComponent` vem ANTES do bloco do `PublicoLayoutComponent`. O recognizer do Angular casa a primeira rota `''` por prefixo; se o layout público viesse primeiro, `/` carregaria `AUTH_ROUTES` sem filho para o restante vazio e nunca chegaria ao redirect `'' → cursos` do shell. Ver `app.routes.spec.ts`.
+- `roleGuard` roda em `canMatch` (preserva o lazy-skip) e, quando `auth.role() === null` (anônimo), redireciona direto para `/entrar` com `returnUrl` — em vez de cair em `/sem-permissao` e só depois ser redirecionado pelo `autenticadoGuard` (o que faria o usuário, após logar, parar em "Sem permissão" em vez da rota pretendida).
+- Erros `422` no registro são distribuídos por um mapa em signal (código do Identity → campo), não por `setErrors` do Reactive Forms.
+- Tema em HEX (exportação padrão do SimUI) — ver `src/styles.css`.
+- Produção assume proxy reverso na mesma origem (`apiUrl: '/tech-curse'`); ajustar `environment.ts` no deploy.
+
 ## Git
 
 Branch `main`. Conventional Commits em pt-BR (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`, `style:`, `build:`, `ci:`). Sem linhas de atribuição de IA em commits ou PRs.
