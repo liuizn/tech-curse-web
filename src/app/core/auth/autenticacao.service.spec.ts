@@ -144,6 +144,20 @@ describe('AutenticacaoService', () => {
     expect(navegar).toHaveBeenCalledWith(['/entrar'], { queryParams: { returnUrl: '/cursos' } });
   });
 
+  it('encerrarSessao limpa a sessão sem navegar', () => {
+    localStorage.setItem(
+      CHAVE_SESSAO,
+      JSON.stringify({ accessToken: TOKEN_ALUNO, refreshToken: 'r1', expiresAt: FUTURO }),
+    );
+    const servico = criar();
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    servico.encerrarSessao();
+    expect(servico.estaAutenticado()).toBe(false);
+    expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
   it('sair sem returnUrl limpa a sessão e navega para /entrar sem queryParams', () => {
     localStorage.setItem(
       CHAVE_SESSAO,

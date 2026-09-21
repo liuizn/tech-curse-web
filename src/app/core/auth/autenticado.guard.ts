@@ -13,7 +13,7 @@ export const autenticadoGuard: CanActivateFn = async (_rota, estado) => {
       await auth.renovar();
       if (auth.estaAutenticado()) return true;
     } catch {
-      /* refresh inválido: cai no redirecionamento */
+      auth.encerrarSessao();
     }
   }
 

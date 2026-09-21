@@ -74,10 +74,14 @@ export class AutenticacaoService {
   }
 
   sair(returnUrl?: string): void {
-    this.sessao.set(null);
-    limparSessao();
+    this.encerrarSessao();
     const extras = returnUrl ? { queryParams: { returnUrl } } : {};
     void this.router.navigate(['/entrar'], extras);
+  }
+
+  encerrarSessao(): void {
+    this.sessao.set(null);
+    limparSessao();
   }
 
   private aplicarSessao(resposta: AuthOutputDto): void {

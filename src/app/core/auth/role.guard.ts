@@ -1,15 +1,32 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivateFn,
+  CanMatchFn,
+  Route,
+  Router,
+  RouterStateSnapshot,
+  UrlSegment,
+} from '@angular/router';
 import { AutenticacaoService } from './autenticacao.service';
 import { Role } from './jwt';
 
 export function roleGuard(roles: Role[]): CanActivateFn & CanMatchFn {
-  return () => {
+  return (
+    _rotaOuRoute: ActivatedRouteSnapshot | Route,
+    segmentosOuEstado: UrlSegment[] | RouterStateSnapshot,
+  ) => {
     const auth = inject(AutenticacaoService);
     const router = inject(Router);
     const atual = auth.role();
-    return atual !== null && roles.includes(atual)
-      ? true
-      : router.createUrlTree(['/sem-permissao']);
+
+    if (atual === null) {
+      const returnUrl = Array.isArray(segmentosOuEstado)
+        ? '/' + segmentosOuEstado.map((s) => s.path).join('/')
+        : segmentosOuEstado.url;
+      return router.createUrlTree(['/entrar'], { queryParams: { returnUrl } });
+    }
+
+    return roles.includes(atual) ? true : router.createUrlTree(['/sem-permissao']);
   };
 }
