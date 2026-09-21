@@ -32,8 +32,9 @@
           size="icon"
           type="button"
           class="md:hidden"
-          aria-label="Abrir menu"
+          [attr.aria-label]="menuAberto() ? 'Fechar menu' : 'Abrir menu'"
           [attr.aria-expanded]="menuAberto()"
+          aria-controls="menu-mobile"
           (click)="alternarMenu()"
         >
           ☰
@@ -43,6 +44,7 @@
 
     @if (menuAberto()) {
       <nav
+        id="menu-mobile"
         class="flex flex-col gap-1 border-t border-border px-4 py-2 md:hidden"
         aria-label="Principal (mobile)"
       >

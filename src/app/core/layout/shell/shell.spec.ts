@@ -42,4 +42,25 @@ describe('ShellComponent', () => {
       .click();
     expect(auth.sair).toHaveBeenCalledTimes(1);
   });
+
+  it('botão do menu mobile alterna aria-expanded, aria-label e o menu', async () => {
+    const fixture = TestBed.createComponent(ShellComponent);
+    await fixture.whenStable();
+    const html: HTMLElement = fixture.nativeElement;
+    const botao = html.querySelector<HTMLButtonElement>('button[aria-controls="menu-mobile"]')!;
+
+    botao.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(botao.getAttribute('aria-expanded')).toBe('true');
+    expect(botao.getAttribute('aria-label')).toBe('Fechar menu');
+    expect(html.querySelector('#menu-mobile')).not.toBeNull();
+
+    botao.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(botao.getAttribute('aria-expanded')).toBe('false');
+    expect(botao.getAttribute('aria-label')).toBe('Abrir menu');
+    expect(html.querySelector('#menu-mobile')).toBeNull();
+  });
 });
