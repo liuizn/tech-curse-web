@@ -1,0 +1,66 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <h2 hlmCardTitle>Criar conta</h2>
+    <p hlmCardDescription>Cadastre-se como aluno para acessar o catálogo.</p>
+  </div>
+  <div hlmCardContent>
+    <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel for="nome">Nome de usuário</label>
+        <input hlmInput id="nome" type="text" formControlName="nome" autocomplete="username" />
+        @if (mensagemDe('nome'); as msg) {
+          <p class="text-sm text-destructive">{{ msg }}</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel for="email">E-mail</label>
+        <input hlmInput id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (mensagemDe('email'); as msg) {
+          <p class="text-sm text-destructive">{{ msg }}</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel for="senha">Senha</label>
+        <input
+          hlmInput
+          id="senha"
+          type="password"
+          formControlName="senha"
+          autocomplete="new-password"
+        />
+        @if (mensagemDe('senha'); as msg) {
+          <p class="text-sm text-destructive">{{ msg }}</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel for="confirmacaoSenha">Confirmar senha</label>
+        <input
+          hlmInput
+          id="confirmacaoSenha"
+          type="password"
+          formControlName="confirmacaoSenha"
+          autocomplete="new-password"
+        />
+        @if (mensagemDe('confirmacaoSenha'); as msg) {
+          <p class="text-sm text-destructive">{{ msg }}</p>
+        }
+      </div>
+
+      @if (erroGeral(); as mensagem) {
+        <p class="text-sm text-destructive" role="alert">{{ mensagem }}</p>
+      }
+
+      <button hlmBtn type="submit" [disabled]="enviando()">
+        {{ enviando() ? 'Criando...' : 'Criar conta' }}
+      </button>
+    </form>
+  </div>
+  <div hlmCardFooter class="justify-center">
+    <p class="text-sm text-muted-foreground">
+      Já tem conta? <a routerLink="/entrar" class="text-primary underline">Entrar</a>
+    </p>
+  </div>
+</section>
