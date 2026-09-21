@@ -10,12 +10,6 @@ import { SemPermissaoComponent } from './features/erros/sem-permissao/sem-permis
 export const routes: Routes = [
   {
     path: '',
-    component: PublicoLayoutComponent,
-    canActivate: [anonimoGuard],
-    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
-  },
-  {
-    path: '',
     component: ShellComponent,
     canActivate: [autenticadoGuard],
     children: [
@@ -37,6 +31,12 @@ export const routes: Routes = [
       },
       { path: 'sem-permissao', component: SemPermissaoComponent },
     ],
+  },
+  {
+    path: '',
+    component: PublicoLayoutComponent,
+    canActivate: [anonimoGuard],
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   { path: '**', component: NaoEncontradoComponent },
 ];
