@@ -1,0 +1,73 @@
+<div class="flex flex-col gap-6">
+  <header>
+    <h1 class="text-2xl font-semibold">Cursos</h1>
+    <p class="text-muted-foreground">Catálogo disponível para matrícula.</p>
+  </header>
+
+  @if (cursos.isLoading()) {
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-teste="carregando">
+      @for (_ of esqueletos; track $index) {
+        <hlm-skeleton class="h-36 w-full" />
+      }
+    </div>
+  } @else if (cursos.error()) {
+    <section hlmCard class="items-center text-center">
+      <div hlmCardContent class="flex flex-col items-center gap-3 py-8">
+        <p class="text-destructive">Não foi possível carregar os cursos.</p>
+        <button
+          hlmBtn
+          variant="outline"
+          type="button"
+          data-teste="recarregar"
+          (click)="recarregar()"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    </section>
+  } @else if (cursos.value(); as pagina) {
+    @if (pagina.items.length === 0) {
+      <p class="py-8 text-center text-muted-foreground">Nenhum curso disponível no momento.</p>
+    } @else {
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (curso of pagina.items; track curso.id) {
+          <article hlmCard>
+            <div hlmCardHeader>
+              <h2 hlmCardTitle>{{ curso.titulo }}</h2>
+              <p hlmCardDescription>{{ curso.categoria }} · {{ curso.cargaHoraria }}h</p>
+            </div>
+            <div hlmCardContent>
+              <p class="line-clamp-3 text-sm text-muted-foreground">{{ curso.descricao }}</p>
+            </div>
+          </article>
+        }
+      </div>
+
+      <nav class="flex items-center justify-center gap-4" aria-label="Paginação">
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          [disabled]="!pagina.hasPreviousPage"
+          (click)="irPara(pagina.pageNumber - 1)"
+        >
+          Anterior
+        </button>
+        <span class="text-sm text-muted-foreground"
+          >Página {{ pagina.pageNumber }} de {{ pagina.totalPages }}</span
+        >
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          [disabled]="!pagina.hasNextPage"
+          (click)="irPara(pagina.pageNumber + 1)"
+        >
+          Próxima
+        </button>
+      </nav>
+    }
+  }
+</div>
