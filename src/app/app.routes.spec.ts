@@ -1,12 +1,14 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { AutenticacaoService } from './core/auth/autenticacao.service';
 import { Role, Usuario } from './core/auth/jwt';
+import { erroInterceptor } from './core/http/erro.interceptor';
 
 describe('app.routes', () => {
   const estaAutenticado = signal(false);
@@ -39,8 +41,8 @@ describe('app.routes', () => {
     auth.encerrarSessao.mockReset();
     TestBed.configureTestingModule({
       providers: [
-        provideRouter(routes),
-        provideHttpClient(),
+        provideRouter(routes, withComponentInputBinding()),
+        provideHttpClient(withInterceptors([erroInterceptor])),
         provideHttpClientTesting(),
         { provide: AutenticacaoService, useValue: auth },
       ],
@@ -91,6 +93,39 @@ describe('app.routes', () => {
     await harness.navigateByUrl('/admin');
     const router = TestBed.inject(Router);
     expect(router.url).toBe('/sem-permissao');
+  });
+
+  it('Student em /aluno vai para /aluno/matriculas', async () => {
+    autenticarComo('Student');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/aluno');
+    expect(TestBed.inject(Router).url).toBe('/aluno/matriculas');
+  });
+
+  it('aluno pendente em /aluno/matriculas vê o aviso', async () => {
+    autenticarComo('Student');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/aluno/matriculas');
+    const backend = TestBed.inject(HttpTestingController);
+    backend
+      .expectOne(`${environment.apiUrl}/Student/me`)
+      .flush(
+        { title: 'Não encontrado', detail: 'Perfil não encontrado.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+    await TestBed.tick();
+    await TestBed.tick();
+    expect(harness.routeNativeElement?.textContent).toContain(
+      'Seu cadastro está aguardando liberação por um administrador',
+    );
+  });
+
+  it('/cursos/1 abre o detalhe do curso', async () => {
+    autenticarComo('Student');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/cursos/1');
+    expect(TestBed.inject(Router).url).toBe('/cursos/1');
+    expect(harness.routeNativeElement?.textContent).toContain('Voltar ao catálogo');
   });
 
   it('rota inexistente ativa NaoEncontradoComponent', async () => {

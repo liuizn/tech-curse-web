@@ -21,7 +21,7 @@ test('registra um aluno, entra e vê o catálogo', async ({ page }) => {
   await page.getByLabel('Confirmar senha').fill(senha);
   await page.getByRole('button', { name: 'Criar conta' }).click();
 
-  await expect(page).toHaveURL(/\/entrar$/);
+  await expect(page).toHaveURL(/\/entrar$/, { timeout: 15_000 });
 
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill(senha);

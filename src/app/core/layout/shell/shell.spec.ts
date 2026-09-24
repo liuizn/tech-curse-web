@@ -43,6 +43,21 @@ describe('ShellComponent', () => {
     expect(auth.sair).toHaveBeenCalledTimes(1);
   });
 
+  it('aluno vê o link Meus cursos', async () => {
+    role.set('Student');
+    const fixture = TestBed.createComponent(ShellComponent);
+    await fixture.whenStable();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('a[href="/aluno/matriculas"]'),
+    ).not.toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('a[href="/aluno/pagamentos"]'),
+    ).not.toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('a[href="/aluno/perfil"]'),
+    ).not.toBeNull();
+  });
+
   it('botão do menu mobile alterna aria-expanded, aria-label e o menu', async () => {
     const fixture = TestBed.createComponent(ShellComponent);
     await fixture.whenStable();

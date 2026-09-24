@@ -1,0 +1,99 @@
+<div class="flex flex-col gap-6">
+  <h1 class="text-2xl font-semibold">Meus pagamentos</h1>
+
+  @if (pagamentos.isLoading()) {
+    <hlm-skeleton data-teste="carregando" class="h-40 w-full" />
+  } @else if (pagamentos.error()) {
+    <div class="flex flex-col items-start gap-3">
+      <p class="text-destructive">Não foi possível carregar seus pagamentos.</p>
+      <button hlmBtn variant="outline" type="button" data-teste="recarregar" (click)="recarregar()">
+        Tentar novamente
+      </button>
+    </div>
+  } @else if (pagamentos.value(); as pagina) {
+    @if (pagina.items.length === 0) {
+      <p class="text-muted-foreground">Nenhum pagamento registrado.</p>
+    } @else {
+      <table class="hidden w-full text-left text-sm sm:table">
+        <thead class="border-b border-border text-muted-foreground">
+          <tr>
+            <th class="py-2 font-medium">Curso</th>
+            <th class="py-2 font-medium">Valor</th>
+            <th class="py-2 font-medium">Status</th>
+            <th class="py-2 font-medium">Criado em</th>
+            <th class="py-2 font-medium">Pago em</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pagina.items; track item.paymentId) {
+            <tr class="border-b border-border">
+              <td class="py-2">
+                <a [routerLink]="['/cursos', item.courseId]" class="hover:underline">{{
+                  item.courseTitulo
+                }}</a>
+              </td>
+              <td class="py-2">{{ item.amount | currency }}</td>
+              <td class="py-2">
+                <span class="rounded-full px-2 py-0.5 text-xs" [class]="classes[item.status]">{{
+                  rotulos[item.status]
+                }}</span>
+              </td>
+              <td class="py-2">{{ item.createdAt | date: 'dd/MM/yyyy' : 'UTC' }}</td>
+              <td class="py-2">
+                {{ item.paidAt ? (item.paidAt | date: 'dd/MM/yyyy' : 'UTC') : '—' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <ul class="flex flex-col gap-3 sm:hidden">
+        @for (item of pagina.items; track item.paymentId) {
+          <li class="rounded-lg border border-border p-3 text-sm">
+            <a [routerLink]="['/cursos', item.courseId]" class="font-medium hover:underline">{{
+              item.courseTitulo
+            }}</a>
+            <div class="mt-1 flex items-center justify-between">
+              <span>{{ item.amount | currency }}</span>
+              <span class="rounded-full px-2 py-0.5 text-xs" [class]="classes[item.status]">{{
+                rotulos[item.status]
+              }}</span>
+            </div>
+            <p class="mt-1 text-muted-foreground">
+              Criado em {{ item.createdAt | date: 'dd/MM/yyyy' : 'UTC' }} · Pago em
+              {{ item.paidAt ? (item.paidAt | date: 'dd/MM/yyyy' : 'UTC') : '—' }}
+            </p>
+          </li>
+        }
+      </ul>
+
+      <nav class="flex items-center justify-center gap-4" aria-label="Paginação">
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          data-teste="anterior"
+          [disabled]="!pagina.hasPreviousPage"
+          (click)="irPara(pagina.pageNumber - 1)"
+        >
+          Anterior
+        </button>
+        <span class="text-sm text-muted-foreground"
+          >Página {{ pagina.pageNumber }} de {{ pagina.totalPages }}</span
+        >
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          data-teste="proxima"
+          [disabled]="!pagina.hasNextPage"
+          (click)="irPara(pagina.pageNumber + 1)"
+        >
+          Próxima
+        </button>
+      </nav>
+    }
+  }
+</div>

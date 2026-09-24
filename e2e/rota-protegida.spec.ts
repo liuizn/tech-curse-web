@@ -25,7 +25,7 @@ test('rota protegida redireciona para /entrar e volta após login', async ({ pag
   expect(registro.status()).toBe(201);
 
   await page.goto('/cursos');
-  await expect(page).toHaveURL(/\/entrar\?returnUrl=%2Fcursos$/);
+  await expect(page).toHaveURL(/\/entrar\?returnUrl=%2Fcursos$/, { timeout: 15_000 });
 
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill(senha);

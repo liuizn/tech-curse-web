@@ -1,0 +1,67 @@
+<div class="flex flex-col gap-6">
+  <a routerLink="/cursos" class="self-start text-sm text-muted-foreground hover:underline"
+    >← Voltar ao catálogo</a
+  >
+
+  @if (naoEncontrado()) {
+    <section hlmCard class="items-center text-center">
+      <div hlmCardContent class="flex flex-col items-center gap-3 py-8">
+        <h1 class="text-xl font-semibold">Curso não encontrado</h1>
+        <a hlmBtn variant="outline" routerLink="/cursos">Ver catálogo</a>
+      </div>
+    </section>
+  } @else if (curso.isLoading()) {
+    <hlm-skeleton class="h-48 w-full" />
+  } @else if (curso.error()) {
+    <p class="text-destructive">Não foi possível carregar o curso.</p>
+  } @else if (curso.value(); as dados) {
+    <article hlmCard>
+      <div hlmCardHeader>
+        <h1 hlmCardTitle class="text-2xl">{{ dados.titulo }}</h1>
+        <p hlmCardDescription class="flex flex-wrap gap-2">
+          <a
+            [routerLink]="['/cursos']"
+            [queryParams]="{ categoria: dados.categoria }"
+            class="hover:underline"
+            >{{ dados.categoria }}</a
+          >
+          <span>· {{ dados.cargaHoraria }}h</span>
+          <span>· criado em {{ dados.dataCriacao | date: 'dd/MM/yyyy' : 'UTC' }}</span>
+        </p>
+      </div>
+      <div hlmCardContent>
+        <p class="whitespace-pre-line">{{ dados.descricao }}</p>
+      </div>
+
+      @if (ehAluno()) {
+        <div hlmCardFooter data-teste="area-matricula" class="flex flex-col items-start gap-2">
+          @if (jaMatriculado()) {
+            <span class="rounded-full bg-primary px-3 py-1 text-sm text-primary-foreground"
+              >Você está matriculado</span
+            >
+            <a routerLink="/aluno/matriculas" class="text-sm underline">Ver meus cursos</a>
+          } @else {
+            <button
+              hlmBtn
+              type="button"
+              data-teste="matricular"
+              [disabled]="
+                perfilAluno.estado() !== 'ativo' ||
+                enviando() ||
+                perfilAluno.matriculasRecurso.isLoading()
+              "
+              (click)="matricular()"
+            >
+              {{ enviando() ? 'Matriculando...' : 'Matricular-me' }}
+            </button>
+            @if (perfilAluno.estado() === 'pendente') {
+              <p class="text-sm text-muted-foreground">
+                Seu cadastro está aguardando liberação por um administrador.
+              </p>
+            }
+          }
+        </div>
+      }
+    </article>
+  }
+</div>
