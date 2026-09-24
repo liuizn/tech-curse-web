@@ -106,16 +106,14 @@ describe('CursoService', () => {
     backend.expectNone(() => true);
     id.set(7);
     await TestBed.tick();
-    backend
-      .expectOne(`${environment.apiUrl}/Course/7`)
-      .flush({
-        id: 7,
-        titulo: 'Curso 7',
-        descricao: 'd',
-        categoria: 'Tech',
-        cargaHoraria: 4,
-        dataCriacao: '2026-01-01',
-      });
+    backend.expectOne(`${environment.apiUrl}/Course/7`).flush({
+      id: 7,
+      titulo: 'Curso 7',
+      descricao: 'd',
+      categoria: 'Tech',
+      cargaHoraria: 4,
+      dataCriacao: '2026-01-01',
+    });
     await TestBed.tick();
     expect(recurso.value()?.titulo).toBe('Curso 7');
   });
