@@ -45,7 +45,11 @@
               hlmBtn
               type="button"
               data-teste="matricular"
-              [disabled]="perfilAluno.estado() !== 'ativo' || enviando()"
+              [disabled]="
+                perfilAluno.estado() !== 'ativo' ||
+                enviando() ||
+                perfilAluno.matriculasRecurso.isLoading()
+              "
               (click)="matricular()"
             >
               {{ enviando() ? 'Matriculando...' : 'Matricular-me' }}

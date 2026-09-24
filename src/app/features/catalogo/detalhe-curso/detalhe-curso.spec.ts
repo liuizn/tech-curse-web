@@ -25,7 +25,14 @@ describe('DetalheCursoComponent', () => {
     dataCadastro: '2026-01-01',
   });
   const cursosMatriculados = signal<ReadonlySet<number>>(new Set());
-  const perfilAluno = { estado, perfil, cursosMatriculados, recarregarMatriculas: vi.fn() };
+  const matriculasCarregando = signal(false);
+  const perfilAluno = {
+    estado,
+    perfil,
+    cursosMatriculados,
+    recarregarMatriculas: vi.fn(),
+    matriculasRecurso: { isLoading: matriculasCarregando },
+  };
   const matriculaService = { matricular: vi.fn<(c: number, s: number) => Promise<void>>() };
   const notificacao = { sucesso: vi.fn(), erro: vi.fn(), info: vi.fn() };
   const curso = {
@@ -52,6 +59,7 @@ describe('DetalheCursoComponent', () => {
     role.set('Student');
     estado.set('ativo');
     cursosMatriculados.set(new Set());
+    matriculasCarregando.set(false);
     perfilAluno.recarregarMatriculas.mockReset();
     matriculaService.matricular.mockReset();
     notificacao.sucesso.mockReset();
@@ -86,6 +94,23 @@ describe('DetalheCursoComponent', () => {
     expect(matriculaService.matricular).toHaveBeenCalledWith(5, 9);
     expect(notificacao.sucesso).toHaveBeenCalledWith('Matrícula realizada');
     expect(perfilAluno.recarregarMatriculas).toHaveBeenCalled();
+  });
+
+  it('mantém o botão desabilitado até a recarga das matrículas terminar', async () => {
+    matriculaService.matricular.mockImplementation(async () => {
+      matriculasCarregando.set(true);
+    });
+    await montar();
+    const botao = el().querySelector<HTMLButtonElement>('button[data-teste="matricular"]')!;
+    botao.click();
+    await fixture.whenStable();
+
+    expect(perfilAluno.recarregarMatriculas).toHaveBeenCalled();
+    expect(botao.disabled).toBe(true);
+
+    matriculasCarregando.set(false);
+    await fixture.whenStable();
+    expect(botao.disabled).toBe(false);
   });
 
   it('falha na matrícula reabilita o botão e não recarrega', async () => {
