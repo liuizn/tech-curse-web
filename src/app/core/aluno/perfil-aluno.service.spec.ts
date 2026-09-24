@@ -124,6 +124,8 @@ describe('PerfilAlunoService', () => {
     role.set('Student');
     await TestBed.tick();
     backend.expectOne(`${environment.apiUrl}/Student/me`).flush(perfil);
+    // httpResource encadeado: um tick resolve o /me, outro reavalia matriculasRecurso
+    // (que só passa a ter uma URL depois que perfil() atualiza) antes de flush.
     await TestBed.tick();
     await TestBed.tick();
     backend.expectOne(`${environment.apiUrl}/Student/3/enrollments`).flush([]);
@@ -133,5 +135,30 @@ describe('PerfilAlunoService', () => {
     backend.expectOne(`${environment.apiUrl}/Student/3/enrollments`).flush(matriculas);
     await TestBed.tick();
     expect(servico.matriculas()).toHaveLength(2);
+  });
+
+  it('recarregarPerfil mantém estado ativo e não refaz a busca de matrículas', async () => {
+    role.set('Student');
+    await TestBed.tick();
+    backend.expectOne(`${environment.apiUrl}/Student/me`).flush(perfil);
+    await TestBed.tick();
+    await TestBed.tick();
+    backend.expectOne(`${environment.apiUrl}/Student/3/enrollments`).flush(matriculas);
+    await TestBed.tick();
+
+    servico.recarregarPerfil();
+    await TestBed.tick();
+
+    expect(servico.estado()).toBe('ativo');
+    expect(servico.perfil()).not.toBeNull();
+    backend.expectNone(`${environment.apiUrl}/Student/3/enrollments`);
+
+    const perfilAtualizado = { ...perfil, nome: 'Aluno Atualizado' };
+    backend.expectOne(`${environment.apiUrl}/Student/me`).flush(perfilAtualizado);
+    await TestBed.tick();
+
+    expect(servico.estado()).toBe('ativo');
+    expect(servico.perfil()?.nome).toBe('Aluno Atualizado');
+    backend.expectNone(`${environment.apiUrl}/Student/3/enrollments`);
   });
 });
