@@ -29,6 +29,7 @@ export class ShellComponent {
       base.push(
         { rota: '/aluno/matriculas', rotulo: 'Meus cursos' },
         { rota: '/aluno/pagamentos', rotulo: 'Pagamentos' },
+        { rota: '/aluno/perfil', rotulo: 'Perfil' },
       );
     }
     return base;
