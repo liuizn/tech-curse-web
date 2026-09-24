@@ -1,8 +1,10 @@
 import { inject } from '@angular/core';
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { NotificacaoService } from '../notificacao/notificacao.service';
 import { ErroApi } from './erro-api';
+
+export const SILENCIAR_ERRO = new HttpContextToken<boolean>(() => false);
 
 const TITULOS_POR_STATUS: Record<number, string> = {
   400: 'Requisição inválida',
@@ -54,7 +56,9 @@ export const erroInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((erro: unknown) => {
       if (!(erro instanceof HttpErrorResponse)) return throwError(() => erro);
       const erroApi = converterErro(erro);
-      if (!STATUS_TRATADOS_LOCALMENTE.has(erroApi.status)) notificacao.erro(erroApi.detalhe);
+      if (!STATUS_TRATADOS_LOCALMENTE.has(erroApi.status) && !req.context.get(SILENCIAR_ERRO)) {
+        notificacao.erro(erroApi.detalhe);
+      }
       return throwError(() => erroApi);
     }),
   );

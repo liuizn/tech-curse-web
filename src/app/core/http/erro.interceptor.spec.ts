@@ -1,9 +1,9 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { NotificacaoService } from '../notificacao/notificacao.service';
 import { ErroApi } from './erro-api';
-import { erroInterceptor } from './erro.interceptor';
+import { erroInterceptor, SILENCIAR_ERRO } from './erro.interceptor';
 
 describe('erroInterceptor', () => {
   let http: HttpClient;
@@ -90,5 +90,36 @@ describe('erroInterceptor', () => {
     const erro = await promessa;
     expect(erro.status).toBe(0);
     expect(erro.detalhe).toBe('Não foi possível conectar ao servidor.');
+  });
+
+  it('com SILENCIAR_ERRO converte o erro mas não mostra toast', async () => {
+    const erro = new Promise<ErroApi>((resolve) =>
+      http
+        .get('/api/silenciosa', { context: new HttpContext().set(SILENCIAR_ERRO, true) })
+        .subscribe({ error: resolve }),
+    );
+    backend
+      .expectOne('/api/silenciosa')
+      .flush(
+        { title: 'Não encontrado', detail: 'Perfil inexistente.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+    const recebido = await erro;
+    expect(recebido.status).toBe(404);
+    expect(recebido.detalhe).toBe('Perfil inexistente.');
+    expect(notificacao.erro).not.toHaveBeenCalled();
+  });
+
+  it('com SILENCIAR_ERRO também não mostra toast em 500', async () => {
+    const erro = new Promise<ErroApi>((resolve) =>
+      http
+        .get('/api/silenciosa', { context: new HttpContext().set(SILENCIAR_ERRO, true) })
+        .subscribe({ error: resolve }),
+    );
+    backend
+      .expectOne('/api/silenciosa')
+      .flush({ detail: 'Falhou.' }, { status: 500, statusText: 'Server Error' });
+    expect((await erro).status).toBe(500);
+    expect(notificacao.erro).not.toHaveBeenCalled();
   });
 });
