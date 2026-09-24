@@ -1,7 +1,7 @@
 # Tech Curse Web — Fase 2: Portal do Aluno
 
 **Data:** 2026-09-23
-**Status:** aprovado em brainstorming, aguardando plano de implementação
+**Status:** aprovado em brainstorming; revisado em 2026-09-23 depois dos PRs do backend #39 e #40; aguardando plano de implementação
 **Depende de:** Fase 1 (`docs/superpowers/specs/2026-09-18-fundacao-angular-design.md`), já integrada na `main`.
 
 ## Objetivo
@@ -10,14 +10,17 @@ Dar ao aluno (role `Student`) um portal completo sobre a base da Fase 1: catálo
 
 ## Restrições vindas do backend
 
-Levantadas lendo o `tech-curse` em 2026-09-23. **Nenhuma mudança no backend faz parte desta fase.**
+Levantadas lendo o `tech-curse`. Os PRs [liuizn/tech-curse#39](https://github.com/liuizn/tech-curse/pull/39) e [liuizn/tech-curse#40](https://github.com/liuizn/tech-curse/pull/40), já integrados, resolveram parte delas antes desta fase.
 
-1. **Cadastro não cria perfil de estudante.** `POST /Auth/register` cria só o usuário do Identity. A entidade `Student` (usada por `/Student/me`, matrícula e pagamentos) só é criada por `POST /Student`, que exige role `Admin`. Um aluno recém-cadastrado recebe `404` em `/Student/me`. **Decisão:** o front trata esse caso como "perfil pendente": mostra um aviso e bloqueia matrícula, cursos, pagamentos e perfil até um Admin criar o perfil (pelo Swagger agora, ou pelo painel da Fase 3).
-2. **Pagamento não se liga a curso no front.** `PaymentOutputDto` traz `enrollmentId`, mas não `courseId`; `CourseStudentOutputDto` (matrículas do aluno) traz `courseId`, mas não `enrollmentId`. **Decisão:** a lista de pagamentos mostra "Matrícula nº X" em vez do nome do curso.
+1. **Perfil de estudante no cadastro — resolvido no backend (#40).** O registro cria o `Student` junto com o usuário. O estado "perfil pendente" continua no front, mas vira exceção: usuários `Student` criados antes do #40 não têm perfil e recebem `404` em `/Student/me`. **Decisão:** o front mostra um aviso e bloqueia matrícula, cursos, pagamentos e perfil até um Admin criar o perfil.
+2. **Pagamento ligado ao curso — resolvido no backend (#40).** O pagamento traz `courseId` e `courseTitulo`; as matrículas do aluno trazem `enrollmentId`. **Decisão:** "Meus pagamentos" mostra o título do curso, com link para o detalhe.
 3. **Não existe rota para cancelar matrícula.** A matrícula só pode ser criada.
 4. **Não existe rota que liste as categorias** nem busca por texto em `/Course`. O filtro por categoria usa valor exato.
 5. **Pagamento é só leitura para o aluno.** Criar, processar e estornar exigem `Admin`.
-6. **Achado de segurança (fora do escopo):** `POST /Auth/register` é público e aceita `role` no corpo; qualquer pessoa consegue se cadastrar como `Admin` chamando a API diretamente. Deve ser corrigido no `tech-curse` antes de produção. Os E2E desta fase usam esse comportamento para montar dados de teste (ver "Testes").
+6. **Registro só cria aluno — resolvido no backend (#39).** `POST /Auth/register` sempre cria `Student`; Admin e Instructor só por `POST /Auth/users` (Admin). Em `Development`, a API semeia um Admin a partir de `Seed:Admin:Email`/`Seed:Admin:Password`.
+7. **Defeito conhecido do backend (fora do escopo):** `POST /Payment` recusa (409 "matrícula inativa") qualquer matrícula recém-criada, porque `EnrollmentIsActiveAsync` considera ativa a matrícula com `Status == false` e toda matrícula nasce com `Status = true`. Na prática, um aluno novo não terá pagamentos até esse defeito ser corrigido; o front só precisa mostrar bem a lista vazia.
+8. **Registro com e-mail já usado:** `422` com `DuplicateEmail` (já tratado no campo pela Fase 1). Um e-mail com perfil antigo sem usuário responde `409`, que o registro já mostra como mensagem geral.
+9. **Rate limiting:** `/Auth/*` (inclui login, registro e `/Auth/users`) aceita 10 requisições por 60 s por IP. Os E2E precisam caber nessa cota.
 
 ## Contrato da API usado nesta fase
 
@@ -27,7 +30,7 @@ Base: `{apiUrl}` = `http://localhost:5130/tech-curse` em desenvolvimento. Enums 
 |---|---|---|---|
 | GET | `/Student/me` | Student | 200 `{ id, nome, email, dataCadastro }`; 404 se não há perfil |
 | PUT | `/Student/{id}` | dono ou Admin | `{ nome }` (obrigatório, até 100 caracteres) → 204; 422 com `errors.Nome` |
-| GET | `/Student/{id}/enrollments` | dono ou Admin | 200 `[{ courseId, titulo, descricao, categoria, matriculaAtiva }]` |
+| GET | `/Student/{id}/enrollments` | dono ou Admin | 200 `[{ courseId, titulo, descricao, categoria, matriculaAtiva, enrollmentId }]` |
 | GET | `/Course` | autenticado | query `PageNumber`, `PageSize` (máx. 50), `SortBy` (`titulo` \| `categoria` \| `datacriacao` \| outro = id), `SortDirection` (`asc` \| `desc`), `Categoria` (exata) → `ResultadoPaginado<Curso>` |
 | GET | `/Course/{id}` | autenticado | 200 `Curso`; 404 |
 | POST | `/Enrollment` | Student ou Admin | `{ courseId, studentId }` → 202 `{ mensagem }`; 404 aluno/curso; 409 já matriculado. Para Student, o backend identifica o aluno pelo e-mail do token e ignora `studentId` |
@@ -37,12 +40,12 @@ Formas usadas no front:
 
 ```ts
 interface PerfilAluno { id: number; nome: string; email: string; dataCadastro: string }
-interface MatriculaAluno { courseId: number; titulo: string; descricao: string; categoria: string; matriculaAtiva: boolean }
+interface MatriculaAluno { courseId: number; titulo: string; descricao: string; categoria: string; matriculaAtiva: boolean; enrollmentId: number }
 type StatusPagamento = 'Pending' | 'Paid' | 'Failed' | 'Refunded'
 interface Pagamento {
   paymentId: number; enrollmentId: number; studentId: number; amount: number;
   status: StatusPagamento; isActive: boolean; createdAt: string; paidAt: string | null;
-  externalTransactionId: string | null;
+  externalTransactionId: string | null; courseId: number; courseTitulo: string;
 }
 ```
 
@@ -51,11 +54,11 @@ interface Pagamento {
 | Tema | Decisão | Motivo |
 |---|---|---|
 | Carregamento do perfil | `PerfilAlunoService` compartilhado (`providedIn: 'root'`) com `httpResource` e signals | uma requisição por sessão; catálogo e área do aluno leem o mesmo estado; mesmo padrão da Fase 1 |
-| Perfil pendente | 404 do `/me` vira estado `pendente`; `AlunoLayout` mostra aviso no lugar do conteúdo | escolha do usuário; sem mudança no backend |
+| Perfil pendente | 404 do `/me` vira estado `pendente`; `AlunoLayout` mostra aviso no lugar do conteúdo | casos antigos sem perfil (restrição 1) |
 | Toast do 404 esperado | `HttpContextToken` `SILENCIAR_ERRO` no `erroInterceptor`, usado pelo `/me` | o 404 do perfil pendente não é erro para o usuário; o recurso é genérico |
 | Estado do catálogo | página, ordenação e categoria na query string | voltar e links compartilhados funcionam; `withComponentInputBinding` já está ligado |
 | Filtro de categoria | clicar na categoria de um curso filtra; chip "× Limpar" remove | a API não lista categorias; evita digitar valor exato |
-| Pagamentos | tabela paginada sem nome do curso | restrição 2 |
+| Pagamentos | tabela paginada com o título do curso (link para o detalhe) | restrição 2 |
 | Formatação | locale `pt-BR` registrado na aplicação (`LOCALE_ID` + `registerLocaleData`) | moeda em R$ e datas em dd/MM/yyyy |
 
 ## Rotas
@@ -138,7 +141,7 @@ A ordem das rotas `''` do `app.routes.ts` (shell antes do layout público) não 
 
 ### Meus pagamentos (`/aluno/pagamentos`, nova)
 
-- Tabela: Matrícula (`nº {enrollmentId}`), Valor (`amount | currency:'BRL'`), Status (selo), Criado em, Pago em (`—` quando nulo).
+- Tabela: Curso (`courseTitulo`, link para `/cursos/{courseId}`), Valor (`amount | currency:'BRL'`), Status (selo), Criado em, Pago em (`—` quando nulo).
 - Selos: `Pending` → "Pendente", `Paid` → "Pago", `Failed` → "Falhou", `Refunded` → "Estornado", cada um com cor própria do tema.
 - Paginação Anterior/Próxima com `pagina` na query string; tamanho de página 10.
 - Vazio: "Nenhum pagamento registrado." Carregando e erro como nas outras listas.
@@ -180,22 +183,24 @@ A ordem das rotas `''` do `app.routes.ts` (shell antes do layout público) não 
 
 ### E2E (Playwright, contra a API real)
 
-Mesma pré-condição da Fase 1 (API em `API_URL`, padrão `http://localhost:5130`; testes são pulados se `/health/ready` falhar). Um helper `e2e/apoio/api.ts` monta os dados pela API:
+Mesma pré-condição da Fase 1 (API em `API_URL`, padrão `http://localhost:5130`; testes pulados se `/health/ready` falhar). Os fluxos que precisam de Admin usam o **Admin semeado** da API: credenciais em `E2E_ADMIN_EMAIL` e `E2E_ADMIN_SENHA`, iguais a `Seed:Admin:Email`/`Seed:Admin:Password` configurados na API; sem essas variáveis, esses fluxos são pulados com mensagem clara. Um helper `e2e/apoio/api.ts` monta os dados pela API:
 
-- `criarAdminDescartavel(request)`: registra `admin<timestamp>` com `role: 'Admin'` (restrição 6) e faz login, devolvendo o token.
+- `entrarComoAdmin(request)`: login do Admin semeado, devolvendo o token.
 - `criarCurso(request, tokenAdmin)`: `POST /Course` com `{ titulo: "Curso E2E <timestamp>", descricao, categoria: "E2E", cargaHoraria: 8 }`.
-- `registrarAluno(request)` e `criarPerfilAluno(request, tokenAdmin, nome, email)` (`POST /Student`).
 
-Fluxos:
+Fluxo:
 
-1. **Perfil pendente:** aluno recém-registrado entra, vai a `/aluno` e vê o aviso de cadastro aguardando liberação.
-2. **Fluxo completo:** Admin descartável cria um curso e o perfil do aluno; aluno entra, abre o detalhe do curso, clica em "Matricular-me", vê o toast, confere o curso em "Meus cursos", edita o nome no perfil e vê "Nenhum pagamento registrado." em pagamentos.
+- **Fluxo completo:** o Admin cria um curso; um aluno se registra pela tela (e já nasce com perfil), entra, abre o detalhe do curso, clica em "Matricular-me", vê o toast, confere o curso em "Meus cursos", edita o nome no perfil e vê "Nenhum pagamento registrado." em pagamentos.
 
-Os usuários e cursos criados pelos E2E ficam no banco local de desenvolvimento (a API não permite apagar usuários). Nomes com timestamp evitam colisão entre execuções.
+O estado "perfil pendente" não tem E2E: depois do #40 ele só acontece com dados antigos, que a API não permite recriar (um estudante excluído também fica bloqueado para login). Fica coberto pelos testes unitários do `PerfilAlunoService` e do `AlunoLayoutComponent`.
+
+Cota de `/Auth`: somando os E2E da Fase 1 e este fluxo, uma execução faz 7 chamadas a `/Auth` (limite de 10 por 60 s). A primeira asserção de cada fluxo usa timeout maior (15 s), porque a primeira execução depois de subir o ambiente é lenta (compilação do `ng serve` e aquecimento da API).
+
+Os usuários e cursos criados pelos E2E ficam no banco local de desenvolvimento. Nomes com timestamp evitam colisão entre execuções.
 
 ## Fora de escopo
 
-- Qualquer mudança no backend (criação automática de perfil, `courseId` no pagamento, cancelamento de matrícula, listagem de categorias, correção da role no registro).
+- Mudanças no backend: cancelamento de matrícula, listagem de categorias e a correção do defeito da restrição 7 ficam para PRs próprios no `tech-curse`.
 - Pagar ou estornar pelo portal do aluno.
 - Painel administrativo (Fase 3).
 - Busca por texto no catálogo.
