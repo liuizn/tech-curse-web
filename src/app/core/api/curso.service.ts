@@ -16,7 +16,7 @@ const ORDENACAO_NA_API: Record<OrdemCursos, { sortBy: string; sortDirection: 'as
 };
 
 export function ehOrdemCursos(valor: unknown): valor is OrdemCursos {
-  return typeof valor === 'string' && valor in ORDENACAO_NA_API;
+  return typeof valor === 'string' && Object.hasOwn(ORDENACAO_NA_API, valor);
 }
 
 export type ParametrosCatalogo = ParametrosPaginacao & {

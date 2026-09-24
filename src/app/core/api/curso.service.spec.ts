@@ -122,5 +122,6 @@ describe('CursoService', () => {
     expect(ehOrdemCursos('titulo-asc')).toBe(true);
     expect(ehOrdemCursos('preco')).toBe(false);
     expect(ehOrdemCursos(undefined)).toBe(false);
+    expect(ehOrdemCursos('toString')).toBe(false);
   });
 });
