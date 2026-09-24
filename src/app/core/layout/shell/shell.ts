@@ -25,7 +25,12 @@ export class ShellComponent {
     const role = this.auth.role();
     const base: LinkNavegacao[] = [{ rota: '/cursos', rotulo: 'Cursos' }];
     if (role === 'Admin' || role === 'Instructor') base.push({ rota: '/admin', rotulo: 'Admin' });
-    if (role === 'Student') base.push({ rota: '/aluno/matriculas', rotulo: 'Meus cursos' });
+    if (role === 'Student') {
+      base.push(
+        { rota: '/aluno/matriculas', rotulo: 'Meus cursos' },
+        { rota: '/aluno/pagamentos', rotulo: 'Pagamentos' },
+      );
+    }
     return base;
   });
 

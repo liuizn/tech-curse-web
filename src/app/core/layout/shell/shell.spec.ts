@@ -50,6 +50,9 @@ describe('ShellComponent', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelector('a[href="/aluno/matriculas"]'),
     ).not.toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('a[href="/aluno/pagamentos"]'),
+    ).not.toBeNull();
   });
 
   it('botão do menu mobile alterna aria-expanded, aria-label e o menu', async () => {
