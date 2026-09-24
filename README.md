@@ -23,6 +23,12 @@ npm test
 npm run e2e
 ```
 
+O fluxo do portal do aluno precisa do Admin semeado da API (em `../tech-curse`, `dotnet user-secrets set "Seed:Admin:Email" ...` e `"Seed:Admin:Password" ...`) e das mesmas credenciais aqui:
+
+```bash
+E2E_ADMIN_EMAIL=admin@techcurse.dev E2E_ADMIN_SENHA='<senha>' npm run e2e
+```
+
 ## Stack
 
 Angular 22 · Tailwind CSS 4 · spartan/ui · tema SimUI · Vitest · Playwright
