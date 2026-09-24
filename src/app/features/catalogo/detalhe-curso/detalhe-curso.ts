@@ -1,5 +1,4 @@
 import { DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -31,17 +30,9 @@ export class DetalheCursoComponent {
     return Number.isInteger(numero) && numero > 0 ? numero : null;
   });
   protected readonly curso = this.cursoService.obter(this.idDoCurso);
-  protected readonly naoEncontrado = computed(() => {
-    if (this.idDoCurso() === null) return true;
-    const erro = this.curso.error();
-    if (!erro) return false;
-    // o erroInterceptor converte a resposta em ErroApi em produção; nos testes sem o
-    // interceptor registrado, a resource ainda expõe o HttpErrorResponse cru.
-    return (
-      extrairErroApi(erro)?.status === 404 ||
-      (erro instanceof HttpErrorResponse && erro.status === 404)
-    );
-  });
+  protected readonly naoEncontrado = computed(
+    () => this.idDoCurso() === null || extrairErroApi(this.curso.error())?.status === 404,
+  );
   protected readonly ehAluno = computed(() => this.auth.role() === 'Student');
   protected readonly jaMatriculado = computed(() => {
     const id = this.idDoCurso();

@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -9,6 +9,7 @@ import { PerfilAluno } from '../../../core/api/modelos/aluno';
 import { MatriculaService } from '../../../core/api/matricula.service';
 import { AutenticacaoService } from '../../../core/auth/autenticacao.service';
 import { Role } from '../../../core/auth/jwt';
+import { erroInterceptor } from '../../../core/http/erro.interceptor';
 import { NotificacaoService } from '../../../core/notificacao/notificacao.service';
 import { DetalheCursoComponent } from './detalhe-curso';
 
@@ -57,7 +58,7 @@ describe('DetalheCursoComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DetalheCursoComponent],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([erroInterceptor])),
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: AutenticacaoService, useValue: { role } },
