@@ -32,7 +32,7 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 
 ## Fases
 
-1. Fundação (esta) — spec em `docs/superpowers/specs/2026-09-18-fundacao-angular-design.md`.
+1. Fundação — spec em `docs/superpowers/specs/2026-09-18-fundacao-angular-design.md`.
 2. Portal do aluno — matrícula, `/me`, pagamentos. Spec em `docs/superpowers/specs/2026-09-23-portal-do-aluno-design.md`.
 3. Painel administrativo — CRUD de cursos/estudantes, pagamentos.
 
