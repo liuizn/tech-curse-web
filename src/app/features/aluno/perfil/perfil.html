@@ -8,7 +8,7 @@
         <dt class="text-muted-foreground">E-mail</dt>
         <dd>{{ dados.email }}</dd>
         <dt class="text-muted-foreground">Aluno desde</dt>
-        <dd>{{ dados.dataCadastro | date: 'dd/MM/yyyy' }}</dd>
+        <dd>{{ dados.dataCadastro | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
       </dl>
 
       <form class="flex flex-col gap-2" [formGroup]="formulario" (ngSubmit)="salvar()" novalidate>
