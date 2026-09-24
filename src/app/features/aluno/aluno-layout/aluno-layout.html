@@ -1,0 +1,39 @@
+@switch (perfilAluno.estado()) {
+  @case ('ativo') {
+    <router-outlet />
+  }
+  @case ('pendente') {
+    <section hlmCard>
+      <div hlmCardContent class="flex flex-col gap-3 py-6">
+        <p>
+          Seu cadastro está aguardando liberação por um administrador. Enquanto isso, você pode
+          navegar pelo catálogo.
+        </p>
+        <a hlmBtn variant="outline" routerLink="/cursos" class="self-start">Ver catálogo</a>
+      </div>
+    </section>
+  }
+  @case ('erro') {
+    <section hlmCard>
+      <div hlmCardContent class="flex flex-col gap-3 py-6">
+        <p class="text-destructive">Não foi possível carregar seu perfil.</p>
+        <button
+          hlmBtn
+          variant="outline"
+          type="button"
+          data-teste="recarregar"
+          class="self-start"
+          (click)="perfilAluno.recarregarPerfil()"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    </section>
+  }
+  @default {
+    <div data-teste="carregando" class="flex flex-col gap-3">
+      <hlm-skeleton class="h-8 w-48" />
+      <hlm-skeleton class="h-32 w-full" />
+    </div>
+  }
+}

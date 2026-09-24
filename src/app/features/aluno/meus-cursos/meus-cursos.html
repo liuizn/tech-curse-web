@@ -1,0 +1,59 @@
+<div class="flex flex-col gap-6">
+  <h1 class="text-2xl font-semibold">Meus cursos</h1>
+
+  @if (matriculas.isLoading()) {
+    <div data-teste="carregando" class="grid gap-4 sm:grid-cols-2">
+      <hlm-skeleton class="h-28 w-full" />
+      <hlm-skeleton class="h-28 w-full" />
+    </div>
+  } @else if (matriculas.error()) {
+    <div class="flex flex-col items-start gap-3">
+      <p class="text-destructive">Não foi possível carregar seus cursos.</p>
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        data-teste="recarregar"
+        (click)="perfilAluno.recarregarMatriculas()"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  } @else if (matriculas.value(); as lista) {
+    @if (lista.length === 0) {
+      <div class="flex flex-col items-start gap-3">
+        <p class="text-muted-foreground">Você ainda não está matriculado em nenhum curso.</p>
+        <a hlmBtn variant="outline" routerLink="/cursos">Ver catálogo</a>
+      </div>
+    } @else {
+      <div class="grid gap-4 sm:grid-cols-2">
+        @for (matricula of lista; track matricula.enrollmentId) {
+          <article hlmCard>
+            <div hlmCardHeader>
+              <h2 hlmCardTitle>
+                <a [routerLink]="['/cursos', matricula.courseId]" class="hover:underline">{{
+                  matricula.titulo
+                }}</a>
+              </h2>
+              <p hlmCardDescription class="flex items-center gap-2">
+                <span>{{ matricula.categoria }}</span>
+                @if (matricula.matriculaAtiva) {
+                  <span class="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
+                    >Ativa</span
+                  >
+                } @else {
+                  <span class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                    >Inativa</span
+                  >
+                }
+              </p>
+            </div>
+            <div hlmCardContent>
+              <p class="line-clamp-3 text-sm text-muted-foreground">{{ matricula.descricao }}</p>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+</div>

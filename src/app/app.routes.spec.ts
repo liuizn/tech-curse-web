@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { AutenticacaoService } from './core/auth/autenticacao.service';
@@ -39,7 +39,7 @@ describe('app.routes', () => {
     auth.encerrarSessao.mockReset();
     TestBed.configureTestingModule({
       providers: [
-        provideRouter(routes),
+        provideRouter(routes, withComponentInputBinding()),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AutenticacaoService, useValue: auth },
@@ -91,6 +91,21 @@ describe('app.routes', () => {
     await harness.navigateByUrl('/admin');
     const router = TestBed.inject(Router);
     expect(router.url).toBe('/sem-permissao');
+  });
+
+  it('Student em /aluno vai para /aluno/matriculas', async () => {
+    autenticarComo('Student');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/aluno');
+    expect(TestBed.inject(Router).url).toBe('/aluno/matriculas');
+  });
+
+  it('/cursos/1 abre o detalhe do curso', async () => {
+    autenticarComo('Student');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/cursos/1');
+    expect(TestBed.inject(Router).url).toBe('/cursos/1');
+    expect(harness.routeNativeElement?.textContent).toContain('Voltar ao catálogo');
   });
 
   it('rota inexistente ativa NaoEncontradoComponent', async () => {
