@@ -1,8 +1,42 @@
 <div class="flex flex-col gap-6">
-  <header>
-    <h1 class="text-2xl font-semibold">Cursos</h1>
-    <p class="text-muted-foreground">Catálogo disponível para matrícula.</p>
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold">Cursos</h1>
+      <p class="text-muted-foreground">Catálogo disponível para matrícula.</p>
+    </div>
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="text-muted-foreground">Ordenar por</span>
+      <select
+        data-teste="ordem"
+        class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        [value]="ordemAtual()"
+        (change)="mudarOrdem($event)"
+      >
+        @for (opcao of opcoesDeOrdem; track opcao.valor) {
+          <option [value]="opcao.valor" [selected]="opcao.valor === ordemAtual()">
+            {{ opcao.rotulo }}
+          </option>
+        }
+      </select>
+    </label>
   </header>
+
+  @if (categoriaAtual(); as categoria) {
+    <div
+      data-teste="chip-categoria"
+      class="flex items-center gap-2 self-start rounded-full border border-border px-3 py-1 text-sm"
+    >
+      <span>Categoria: {{ categoria }}</span>
+      <button
+        type="button"
+        class="text-muted-foreground hover:text-foreground"
+        aria-label="Limpar filtro de categoria"
+        (click)="filtrarPorCategoria(null)"
+      >
+        ×
+      </button>
+    </div>
+  }
 
   @if (cursos.isLoading()) {
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-teste="carregando">
@@ -27,14 +61,41 @@
     </section>
   } @else if (cursos.value(); as pagina) {
     @if (pagina.items.length === 0) {
-      <p class="py-8 text-center text-muted-foreground">Nenhum curso disponível no momento.</p>
+      <p class="py-8 text-center text-muted-foreground">
+        @if (categoriaAtual(); as categoria) {
+          Nenhum curso na categoria {{ categoria }}.
+        } @else {
+          Nenhum curso disponível no momento.
+        }
+      </p>
     } @else {
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @for (curso of pagina.items; track curso.id) {
           <article hlmCard>
             <div hlmCardHeader>
-              <h2 hlmCardTitle>{{ curso.titulo }}</h2>
-              <p hlmCardDescription>{{ curso.categoria }} · {{ curso.cargaHoraria }}h</p>
+              <h2 hlmCardTitle>
+                <a [routerLink]="['/cursos', curso.id]" class="hover:underline">{{
+                  curso.titulo
+                }}</a>
+              </h2>
+              <p hlmCardDescription class="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  class="underline-offset-2 hover:underline"
+                  [attr.data-teste]="'categoria-' + curso.id"
+                  (click)="filtrarPorCategoria(curso.categoria)"
+                >
+                  {{ curso.categoria }}
+                </button>
+                <span>· {{ curso.cargaHoraria }}h</span>
+                @if (mostraSeloMatriculado() && cursosMatriculados().has(curso.id)) {
+                  <span
+                    data-teste="selo-matriculado"
+                    class="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
+                    >Matriculado</span
+                  >
+                }
+              </p>
             </div>
             <div hlmCardContent>
               <p class="line-clamp-3 text-sm text-muted-foreground">{{ curso.descricao }}</p>
@@ -49,6 +110,7 @@
           variant="outline"
           size="sm"
           type="button"
+          data-teste="anterior"
           [disabled]="!pagina.hasPreviousPage"
           (click)="irPara(pagina.pageNumber - 1)"
         >
@@ -62,6 +124,7 @@
           variant="outline"
           size="sm"
           type="button"
+          data-teste="proxima"
           [disabled]="!pagina.hasNextPage"
           (click)="irPara(pagina.pageNumber + 1)"
         >
